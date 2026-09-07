@@ -60,6 +60,32 @@ public class ExceptionMiddlewareTests
     }
 
     [Fact]
+    public async Task Invoke_NextThrowsAndRequestIsAborted_CancelsResponseWriting()
+    {
+        var next = Substitute.For<RequestDelegate>();
+
+        next(Arg.Any<HttpContext>())
+            .Throws(new InvalidOperationException("boom"));
+
+        var middleware =
+            new Synentra.Middleware.ExceptionMiddleware(next, _logger);
+
+        using var cancellationTokenSource = new CancellationTokenSource();
+        await cancellationTokenSource.CancelAsync();
+
+        var context = new DefaultHttpContext
+        {
+            RequestAborted = cancellationTokenSource.Token
+        };
+
+        context.Response.Body = new MemoryStream();
+
+        var act = () => middleware.Invoke(context);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
     public async Task Invoke_NextThrows_LogsError()
     {
         var exception = new InvalidOperationException("test error");
