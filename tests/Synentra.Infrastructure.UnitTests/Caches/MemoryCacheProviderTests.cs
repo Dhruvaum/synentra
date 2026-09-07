@@ -80,6 +80,30 @@ public class MemoryCacheProviderTests
     }
 
     [Fact]
+    public async Task TryGetValueAsync_CancelledToken_Throws()
+    {
+        var sut = CreateSut();
+        using var cancellationTokenSource = new CancellationTokenSource();
+        await cancellationTokenSource.CancelAsync();
+
+        var act = async () => await sut.TryGetValueAsync<string>("anyKey", cancellationTokenSource.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task SetAsync_CancelledToken_Throws()
+    {
+        var sut = CreateSut();
+        using var cancellationTokenSource = new CancellationTokenSource();
+        await cancellationTokenSource.CancelAsync();
+
+        var act = async () => await sut.SetAsync<string>("anyKey", "value", cancellationTokenSource.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
     public async Task RemoveAsync_ExistingKey_RemovesIt()
     {
         var sut = CreateSut();

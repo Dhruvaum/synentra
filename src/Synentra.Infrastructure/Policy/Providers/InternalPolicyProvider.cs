@@ -98,12 +98,12 @@ public class InternalPolicyProvider : IPolicyProvider
 
     private async Task<Dictionary<string, PolicyDefinition>> GetAllPoliciesAsync(CancellationToken cancellationToken)
     {
-        var (success, policies) = await _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(CacheKey);
+        var (success, policies) = await _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(CacheKey, cancellationToken);
         if (success && policies != null)
             return policies;
 
         policies = await _loader.LoadAllAsync(cancellationToken);
-        await _cacheProvider.SetAsync(CacheKey, policies);
+        await _cacheProvider.SetAsync(CacheKey, policies, cancellationToken);
         return policies;
     }
 }

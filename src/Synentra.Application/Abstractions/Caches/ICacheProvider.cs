@@ -4,7 +4,7 @@ public interface ICacheProvider
 {
     Task<object?> GetAsync(object key);
     Task<TItem?> GetAsync<TItem>(object key);
-    Task<TItem> SetAsync<TItem>(object key, TItem value);
-    Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key);
+    Task<TItem> SetAsync<TItem>(object key, TItem value, CancellationToken cancellationToken = default);
+    Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key, CancellationToken cancellationToken = default);
     Task RemoveAsync(object key);
 }
