@@ -22,6 +22,11 @@ using Synentra.BuildingBlocks.Configuration.System;
 using Synentra.BuildingBlocks.Configuration.System.Storage.Cache;
 using Synentra.Infrastructure.Caches;
 using Synentra.Infrastructure.SecretManagement;
+using Synentra.Infrastructure.Semantic.Providers.AzureAi;
+using Synentra.Infrastructure.Semantic.Providers.Gemini;
+using Synentra.Infrastructure.Semantic.Providers.InternalBert;
+using Synentra.Infrastructure.Semantic.Providers.Ollama;
+using Synentra.Infrastructure.Semantic.Providers.OpenAi;
 
 namespace Synentra.Infrastructure.UnitTests.DI;
 
@@ -266,7 +271,7 @@ public class DependencyInjectionTests
         var serviceProvider = infrastructure.BuildServiceProvider();
 
         var provider = serviceProvider.GetService<ISemanticProvider>();
-        provider.Should().NotBeNull();
+        provider.Should().BeOfType<InternalOnnxProvider>();
     }
 
     [Fact]
@@ -276,7 +281,7 @@ public class DependencyInjectionTests
 
         var provider = services.GetService<ISemanticProvider>();
 
-        provider.Should().NotBeNull();
+        provider.Should().BeOfType<OpenAiProvider>();
     }
 
     [Fact]
@@ -286,7 +291,7 @@ public class DependencyInjectionTests
 
         var provider = services.GetService<ISemanticProvider>();
 
-        provider.Should().NotBeNull();
+        provider.Should().BeOfType<AzureAiProvider>();
     }
 
     [Fact]
@@ -296,7 +301,7 @@ public class DependencyInjectionTests
 
         var provider = services.GetService<ISemanticProvider>();
 
-        provider.Should().NotBeNull();
+        provider.Should().BeOfType<GeminiProvider>();
     }
 
     [Fact]
@@ -306,7 +311,18 @@ public class DependencyInjectionTests
 
         var provider = services.GetService<ISemanticProvider>();
 
-        provider.Should().NotBeNull();
+        provider.Should().BeOfType<OllamaProvider>();
+    }
+
+    [Fact]
+    public void AddInfrastructure_UnsupportedSemanticProvider_FallsBackToInternalProvider()
+    {
+        var services = BuildServices(semanticProvider: "unsupported");
+
+        var provider = services.GetService<ISemanticProvider>();
+
+        provider.Should().BeOfType<InternalOnnxProvider>();
+        provider.Should().BeSameAs(services.GetRequiredService<InternalOnnxProvider>());
     }
 
     [Fact]
