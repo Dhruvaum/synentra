@@ -198,7 +198,7 @@ public sealed class InternalOnnxProvider : ISemanticProvider, IDisposable
     public async Task<SemanticAnalysisResult> AnalyzeAsync(
         string? body,
         string metadata,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
 
