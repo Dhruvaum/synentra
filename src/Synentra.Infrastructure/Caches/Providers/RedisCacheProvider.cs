@@ -48,8 +48,9 @@ public class RedisCacheProvider : ICacheProvider
         return JsonSerializer.Deserialize<TItem>(value.ToString());
     }
 
-    public async Task<TItem> SetAsync<TItem>(object key, TItem value)
+    public async Task<TItem> SetAsync<TItem>(object key, TItem value, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var db = _redis.GetDatabase();
         var serializedValue = JsonSerializer.Serialize(value);
         await db.StringSetAsync(
@@ -60,8 +61,9 @@ public class RedisCacheProvider : ICacheProvider
         return value;
     }
         
-    public async Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key)
+    public async Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var db = _redis.GetDatabase();
         var redisValue = await db.StringGetAsync($"hitl:{key}");
         if (redisValue.HasValue)
