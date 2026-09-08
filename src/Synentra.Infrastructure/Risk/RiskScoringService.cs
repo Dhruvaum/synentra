@@ -70,7 +70,7 @@ public class RiskScoringService : IRiskScoringService
 
         // Build a cache key based on agent ID and request fingerprint
         var cacheKey = $"risk:{requestContext.AgentId}:{requestContext.Method}:{requestContext.Path}:{context.Intent.Label}:{DateTime.UtcNow:yyyyMMddHHmm}";
-        var (success, cachedResult) = await _cacheProvider.TryGetValueAsync<RiskEvaluationResult>(cacheKey);
+        var (success, cachedResult) = await _cacheProvider.TryGetValueAsync<RiskEvaluationResult>(cacheKey, cancellationToken);
 
         if (success && cachedResult is not null)
             return cachedResult;
@@ -105,7 +105,7 @@ public class RiskScoringService : IRiskScoringService
         };
 
         // Cache for a short period (e.g., 10 seconds) to avoid over‑calculation for same agent in burst
-        await _cacheProvider.SetAsync(cacheKey, result);
+        await _cacheProvider.SetAsync(cacheKey, result, cancellationToken);
         _logger.LogDebug("Risk score for agent {AgentId}: {Score}", requestContext.AgentId, score);
         return result;
     }
