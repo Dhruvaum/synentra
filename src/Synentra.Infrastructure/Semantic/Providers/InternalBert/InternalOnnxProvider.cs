@@ -219,7 +219,7 @@ public sealed class InternalOnnxProvider : ISemanticProvider, IDisposable
 
         var (cacheHit, cachedResult) =
             await _cacheProvider!.TryGetValueAsync<SemanticAnalysisResult>(
-                cacheKey);
+                cacheKey, cancellationToken);
 
         if (cacheHit && cachedResult is not null)
         {
@@ -355,7 +355,7 @@ public sealed class InternalOnnxProvider : ISemanticProvider, IDisposable
                     $"Internal ONNX: {intent} ({confidence:F2})"
             };
 
-            await _cacheProvider.SetAsync(cacheKey, result);
+            await _cacheProvider.SetAsync(cacheKey, result, cancellationToken);
 
             _logger.LogDebug(
                 "Internal ONNX inference completed. Intent: {Intent}; " +

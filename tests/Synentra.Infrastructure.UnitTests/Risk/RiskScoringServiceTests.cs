@@ -148,7 +148,7 @@ public class RiskScoringServiceTests
             TrustScore = 0.8,
             RiskLevel = "high"
         };
-        _cacheProvider.TryGetValueAsync<RiskEvaluationResult>(Arg.Any<string>()).Returns((true, cached));
+        _cacheProvider.TryGetValueAsync<RiskEvaluationResult>(Arg.Any<string>(), TestContext.Current.CancellationToken).Returns((true, cached));
 
         var result = await _sut.ComputeRiskScoreAsync(context, TestContext.Current.CancellationToken);
 
@@ -161,12 +161,12 @@ public class RiskScoringServiceTests
     {
         var agentId = Guid.NewGuid();
         var context = BuildContext(agentId);
-        _cacheProvider.TryGetValueAsync<RiskEvaluationResult>(Arg.Any<string>()).Returns((false, null));
+        _cacheProvider.TryGetValueAsync<RiskEvaluationResult>(Arg.Any<string>(), TestContext.Current.CancellationToken).Returns((false, null));
 
         var result = await _sut.ComputeRiskScoreAsync(context, TestContext.Current.CancellationToken);
 
         result.RiskScore.Should().BeApproximately(0.4, 1e-9);
-        await _cacheProvider.Received(1).SetAsync(Arg.Any<string>(), Arg.Any<RiskEvaluationResult>());
+        await _cacheProvider.Received(1).SetAsync(Arg.Any<string>(), Arg.Any<RiskEvaluationResult>(), TestContext.Current.CancellationToken);
     }
 
     [Fact]
