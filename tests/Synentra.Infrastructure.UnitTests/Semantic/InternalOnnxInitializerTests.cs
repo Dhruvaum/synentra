@@ -180,8 +180,8 @@ public class InternalOnnxInitializerTests
         public Task<object?> GetAsync(object key) => throw new NotImplementedException();
         public Task<TItem?> GetAsync<TItem>(object key) => throw new NotImplementedException();
         public Task RemoveAsync(object key) => throw new NotImplementedException();
-        public Task<TItem> SetAsync<TItem>(object key, TItem value) => throw new NotImplementedException();
-        public Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key) => throw new NotImplementedException();
+        public Task<TItem> SetAsync<TItem>(object key, TItem value, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key, CancellationToken cancellationToken = default) => throw new NotImplementedException();
     }
 }
 

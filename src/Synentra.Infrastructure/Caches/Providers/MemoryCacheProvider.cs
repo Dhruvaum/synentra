@@ -37,8 +37,9 @@ public class MemoryCacheProvider : ICacheProvider
         return Task.FromResult(value);
     }
 
-    public Task<TItem> SetAsync<TItem>(object key, TItem value)
+    public Task<TItem> SetAsync<TItem>(object key, TItem value, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var options = new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = _config.TimeToLive
@@ -48,8 +49,9 @@ public class MemoryCacheProvider : ICacheProvider
         return Task.FromResult(value);
     }
 
-    public Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key)
+    public Task<(bool success, TItem? value)> TryGetValueAsync<TItem>(string key, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var result = _cache.TryGetValue(key, out TItem? value);
         _logger.LogInformation($"InMemory GET {key}");
         return Task.FromResult((result, value));

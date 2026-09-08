@@ -19,7 +19,7 @@ public class InternalPolicyProviderTests
     public InternalPolicyProviderTests()
     {
         _cacheService.Current.Returns(_cacheProvider);
-        _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>())
+        _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((false, null));
         _loader.LoadAllAsync(Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, PolicyDefinition>());
@@ -224,7 +224,7 @@ public class InternalPolicyProviderTests
         {
             ["my-policy"] = new PolicyDefinition { Name = "my-policy", Default = PolicyType.Allow }
         };
-        _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>())
+        _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((true, policies));
 
         await _sut.EvaluateAsync(BuildEvaluationContext("my-policy"), CancellationToken.None);
@@ -236,7 +236,7 @@ public class InternalPolicyProviderTests
     public async Task EvaluateAsync_CacheMiss_CallsLoaderAndCaches()
     {
         var policy = new PolicyDefinition { Name = "my-policy", Default = PolicyType.Allow };
-        _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>())
+        _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((false, null));
         _loader.LoadAllAsync(Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, PolicyDefinition> { ["my-policy"] = policy });
@@ -244,7 +244,7 @@ public class InternalPolicyProviderTests
         await _sut.EvaluateAsync(BuildEvaluationContext("my-policy"), CancellationToken.None);
 
         await _loader.Received(1).LoadAllAsync(Arg.Any<CancellationToken>());
-        await _cacheProvider.Received(1).SetAsync(Arg.Any<string>(), Arg.Any<Dictionary<string, PolicyDefinition>>());
+        await _cacheProvider.Received(1).SetAsync(Arg.Any<string>(), Arg.Any<Dictionary<string, PolicyDefinition>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -258,6 +258,41 @@ public class InternalPolicyProviderTests
             cancellationToken);
 
         await _loader.Received(1).LoadAllAsync(cancellationToken);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_CacheMiss_PropagatesCancellationTokenToCacheProvider()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+
+        await _sut.EvaluateAsync(
+            BuildEvaluationContext("non-existent-policy"),
+            cancellationToken);
+
+        await _cacheProvider.Received(1)
+            .TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>(), cancellationToken);
+        await _cacheProvider.Received(1)
+            .SetAsync(Arg.Any<string>(), Arg.Any<Dictionary<string, PolicyDefinition>>(), cancellationToken);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_CacheHit_PropagatesCancellationTokenToCacheProvider()
+    {
+        var policies = new Dictionary<string, PolicyDefinition>
+        {
+            ["my-policy"] = new PolicyDefinition { Name = "my-policy", Default = PolicyType.Allow }
+        };
+        _cacheProvider.TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((true, policies));
+
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+
+        await _sut.EvaluateAsync(BuildEvaluationContext("my-policy"), cancellationToken);
+
+        await _cacheProvider.Received(1)
+            .TryGetValueAsync<Dictionary<string, PolicyDefinition>>(Arg.Any<string>(), cancellationToken);
     }
 
     [Fact]
